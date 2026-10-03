@@ -1,6 +1,6 @@
 [package]
 name = "wherewasi"
-version = "1.0.1"
+version = "1.0.2"
 edition = "2024"
 description = "A simple CLI tool to remember what you were doing while you were away."
 license = "MIT"
