@@ -2,7 +2,7 @@ use anyhow::{Result, bail};
 use clap::Parser;
 use colored::Colorize;
 
-use cli::{Cli, Commands};
+use cli::{Cli, Commands, ConfigCommands};
 
 mod cli;
 mod data_loading;
@@ -46,10 +46,58 @@ fn main() -> Result<()> {
         return Ok(());
     }
 
+    if let Some(Commands::Config { commands }) = args.command {
+        match commands {
+            ConfigCommands::Show => {
+                let settings = data_loading::load_settings()?;
+
+                println!();
+                println!("{}", "WHEREWASI CONFIG".blue().bold());
+                println!();
+                println!(
+                    "  {} {}",
+                    "show_info".bright_black(),
+                    if settings.show_info {
+                        "true".green()
+                    } else {
+                        "false".red()
+                    }
+                );
+                println!();
+            }
+
+            ConfigCommands::Set { key, value } => {
+                let mut settings = data_loading::load_settings()?;
+
+                match key.as_str() {
+                    "show_info" => {
+                        settings.show_info = match value.as_str() {
+                            "true" => true,
+                            "false" => false,
+                            _ => bail!("Invalid value for show_info: use true or false"),
+                        };
+                    }
+                    _ => bail!("Unknown setting: {key}"),
+                }
+
+                data_loading::save_settings(&settings)?;
+
+                println!(
+                    "{} {} set to {}.",
+                    "✓".green().bold(),
+                    key.green(),
+                    value.green()
+                );
+            }
+        }
+
+        return Ok(());
+    }
+
     let mut data = data_loading::load_data()?;
 
     match args.command {
-        None => manager::show(&data, args.all, false, false),
+        None => manager::show(&data, args.all, args.full_date, false),
 
         Some(Commands::Note { text, manual }) => {
             manager::add_note(&mut data, text, !manual);
@@ -100,7 +148,7 @@ fn main() -> Result<()> {
 
         Some(Commands::Enter) => manager::show(&data, false, false, true),
 
-        Some(Commands::Init { .. }) => unreachable!(),
+        Some(Commands::Init { .. }) | Some(Commands::Config { .. }) => unreachable!(),
     }
 
     Ok(())

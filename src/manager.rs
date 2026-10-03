@@ -3,7 +3,7 @@ use colored::*;
 use comfy_table::presets::UTF8_FULL;
 use comfy_table::{Cell, CellAlignment, Color, ContentArrangement, Table};
 
-use crate::data_loading::{WWIData, WWINote};
+use crate::data_loading::{self, WWIData, WWINote};
 
 pub fn add_note(data: &mut WWIData, text: String, sticky: bool) {
     let id = (data.notes.len() + 1) as u32;
@@ -56,6 +56,17 @@ pub fn show(data: &WWIData, all: bool, full_date: bool, is_enter: bool) {
         .collect();
 
     if notes.is_empty() {
+        let show_info = if let Ok(settings) = data_loading::load_settings() {
+            settings.show_info
+        } else {
+            println!("Settings could not be loaded!");
+            true
+        };
+
+        if is_enter && !show_info {
+            return;
+        }
+
         println!("{} No notes for this folder.", "INFO".blue().bold());
         return;
     }

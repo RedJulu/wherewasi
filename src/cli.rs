@@ -59,4 +59,16 @@ pub enum Commands {
     Enter,
     #[command(about = "Print the shell hook")]
     Init { shell: String },
+    Config {
+        #[command(subcommand)]
+        commands: ConfigCommands,
+    },
+}
+
+#[derive(Subcommand, Debug)]
+pub enum ConfigCommands {
+    #[command(about = "Set a setting")]
+    Set { key: String, value: String },
+    #[command(about = "Show current settings")]
+    Show,
 }
