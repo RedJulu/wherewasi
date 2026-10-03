@@ -1,5 +1,6 @@
 use anyhow::{Result, bail};
 use clap::Parser;
+use colored::Colorize;
 
 use cli::{Cli, Commands};
 
@@ -19,6 +20,18 @@ cd() {
     builtin cd "$@" || return
     wherewasi_chpwd
 }"#;
+
+const POWERSHELL_HOOK: &str = r#"function wherewasi_chpwd {
+    wherewasi enter
+}
+
+function Set-Location {
+    Microsoft.PowerShell.Management\Set-Location @args
+    if ($?) {
+        wherewasi_chpwd
+    }
+}"#;
+
 fn main() -> Result<()> {
     let args = Cli::parse();
 
@@ -26,34 +39,67 @@ fn main() -> Result<()> {
         match shell.as_str() {
             "zsh" => println!("{ZSH_HOOK}"),
             "bash" => println!("{BASH_HOOK}"),
-            other => bail!("Unsupported shell: {other} | (Only zsh & bash)"),
+            "powershell" => println!("{POWERSHELL_HOOK}"),
+            other => bail!("Unsupported shell: {other} (only zsh, bash and powershell for now)"),
         }
+
         return Ok(());
     }
 
     let mut data = data_loading::load_data()?;
-    let full_date = args.full_date;
 
     match args.command {
-        None => manager::show(&data, args.all, full_date, false),
+        None => manager::show(&data, args.all, false, false),
+
         Some(Commands::Note { text, manual }) => {
             manager::add_note(&mut data, text, !manual);
             data_loading::save_data(&data)?;
-            println!("Note saved.");
+
+            println!("{} {}", "✓".green().bold(), "Note saved.".green());
         }
+
         Some(Commands::Done { id, all }) => {
             let target = if all { None } else { id };
             let n = manager::remove_notes(&mut data, target);
             data_loading::save_data(&data)?;
-            println!("Removed {n} note(s).");
+
+            if n == 0 {
+                println!(
+                    "{} {}",
+                    "!".yellow().bold(),
+                    "No matching notes found.".yellow()
+                );
+            } else {
+                println!(
+                    "{} {}",
+                    "✓".green().bold(),
+                    format!("Removed {n} note(s).").green()
+                );
+            }
         }
+
         Some(Commands::Dismiss { id, all }) => {
             let target = if all { None } else { id };
             let n = manager::dismiss_notes(&mut data, target);
             data_loading::save_data(&data)?;
-            println!("Dismissed {n} note(s).");
+
+            if n == 0 {
+                println!(
+                    "{} {}",
+                    "!".yellow().bold(),
+                    "No matching active notes found.".yellow()
+                );
+            } else {
+                println!(
+                    "{} {}",
+                    "✓".green().bold(),
+                    format!("Dismissed {n} note(s).").green()
+                );
+            }
         }
-        Some(Commands::Enter) => manager::show(&data, false, full_date, true),
+
+        Some(Commands::Enter) => manager::show(&data, false, false, true),
+
         Some(Commands::Init { .. }) => unreachable!(),
     }
 

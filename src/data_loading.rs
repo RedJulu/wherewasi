@@ -40,8 +40,12 @@ pub fn save_data(data: &WWIData) -> Result<()> {
     let path = notes_path()?;
 
     if data.notes.is_empty() {
-        return fs::remove_file(&path)
-            .with_context(|| format!("Unable to delete {}", path.display()));
+        if path.exists() {
+            fs::remove_file(&path)
+                .with_context(|| format!("Unable to delete {}", path.display()))?;
+        }
+
+        return Ok(());
     }
 
     let json = serde_json::to_string_pretty(data).context("Failed to serialize data")?;

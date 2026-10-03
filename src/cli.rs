@@ -41,7 +41,7 @@ pub enum Commands {
     },
     #[command(about = "Delete a note")]
     Done {
-        #[arg(conflicts_with = "all", required_unless_present = "all")]
+        #[arg(conflicts_with = "all", required_unless_present = "all", value_parser = clap::value_parser!(u32).range(1..))]
         id: Option<u32>,
 
         #[arg(short, long)]
@@ -49,7 +49,7 @@ pub enum Commands {
     },
     #[command(about = "Silence a note")]
     Dismiss {
-        #[arg(conflicts_with = "all", required_unless_present = "all")]
+        #[arg(conflicts_with = "all", required_unless_present = "all", value_parser = clap::value_parser!(u32).range(1..))]
         id: Option<u32>,
 
         #[arg(short, long)]
