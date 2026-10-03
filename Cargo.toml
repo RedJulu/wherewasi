@@ -1,7 +1,11 @@
 [package]
 name = "wherewasi"
-version = "0.1.0"
+version = "1.0.0"
 edition = "2024"
+description = "A simple CLI tool to remember what you were doing while you were away."
+license = "MIT"
+repository = "https://github.com/RedJulu/wherewasi"
+readme = "README.md"
 
 [dependencies]
 anyhow = "1.0.104"
