@@ -100,7 +100,7 @@ fn main() -> Result<()> {
         None => manager::show(&data, args.all, args.full_date, false),
 
         Some(Commands::Note { text, manual }) => {
-            manager::add_note(&mut data, text, !manual);
+            manager::add_note(&mut data, text, manual);
             data_loading::save_data(&data)?;
 
             println!("{} {}", "✓".green().bold(), "Note saved.".green());

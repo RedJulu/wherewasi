@@ -1,6 +1,6 @@
 use anyhow::{Context, Result};
 use chrono::{DateTime, Utc};
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize};
 use std::{fs, path::PathBuf};
 
 #[derive(Debug, Serialize, Deserialize, Default)]
@@ -24,8 +24,30 @@ pub struct WWINote {
     pub id: u32,
     pub text: String,
     pub created: DateTime<Utc>,
-    pub sticky: bool,
+    #[serde(alias = "sticky", deserialize_with = "deserialize_manual", default)]
+    pub manual: bool,
     pub dismissed: bool,
+}
+
+fn deserialize_manual<'de, D>(deserializer: D) -> std::result::Result<bool, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    #[derive(Deserialize)]
+    #[serde(untagged)]
+    enum StickyOrManual {
+        Bool(bool),
+        String(String),
+        Int(i64),
+    }
+
+    let val = Option::<StickyOrManual>::deserialize(deserializer)?;
+    match val {
+        Some(StickyOrManual::Bool(b)) => Ok(!b),
+        Some(StickyOrManual::String(s)) => Ok(s != "true"),
+        Some(StickyOrManual::Int(n)) => Ok(n == 0),
+        None => Ok(false),
+    }
 }
 
 fn notes_path() -> Result<PathBuf> {

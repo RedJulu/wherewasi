@@ -13,7 +13,7 @@ fn styles() -> Styles {
 #[command(
     name = "wherewasi",
     author = "RedJulu",
-    version = "1.0",
+    version = "1.1.0",
     about = "🛌 Remember what you were coding while you were gone",
     styles = styles(),
 )]

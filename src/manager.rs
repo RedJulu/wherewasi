@@ -5,14 +5,14 @@ use comfy_table::{Cell, CellAlignment, Color, ContentArrangement, Table};
 
 use crate::data_loading::{self, WWIData, WWINote};
 
-pub fn add_note(data: &mut WWIData, text: String, sticky: bool) {
+pub fn add_note(data: &mut WWIData, text: String, manual: bool) {
     let id = (data.notes.len() + 1) as u32;
 
     data.notes.push(WWINote {
         id,
         text,
         created: Utc::now(),
-        sticky,
+        manual,
         dismissed: false,
     });
 }
@@ -51,7 +51,7 @@ pub fn show(data: &WWIData, all: bool, full_date: bool, is_enter: bool) {
     let notes: Vec<&WWINote> = data
         .notes
         .iter()
-        .filter(|n| !is_enter || n.sticky)
+        .filter(|n| !is_enter || !n.manual)
         .filter(|n| all || !n.dismissed)
         .collect();
 
@@ -101,8 +101,8 @@ pub fn show(data: &WWIData, all: bool, full_date: bool, is_enter: bool) {
     ]);
 
     for n in notes {
-        let manual_display = if !n.sticky { "Yes" } else { "No" };
-        let manual_color = if !n.sticky { Color::Green } else { Color::Red };
+        let manual_display = if n.manual { "Yes" } else { "No" };
+        let manual_color = if n.manual { Color::Green } else { Color::Red };
 
         let dismissed_display = if n.dismissed { "Yes" } else { "No" };
         let dismissed_color = if n.dismissed {
